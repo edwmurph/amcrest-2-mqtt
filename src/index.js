@@ -14,4 +14,6 @@ amcrestEmitter.on( 'event', ({ event }) => {
   if ( event.Code === 'PhoneCallDetect' && event.action === 'Start' ) {
     console.log('DOORBELL PRESSED');
   }
+
+  console.log( event );
 });
