@@ -7,6 +7,12 @@ class AmcrestEmitter extends EventEmitter {
   constructor({ host, user, password }) {
     super();
 
+    if ( !password ) {
+      throw new Error('missing password');
+    }
+
+    console.log({ host, user });
+
     const url_base = `http://${ host }`;
 
     Object.assign( this, {
@@ -17,9 +23,8 @@ class AmcrestEmitter extends EventEmitter {
     });
   }
 
-  async #get_options() {
+  async #get_axios_options() {
     try {
-      console.log('requesting auth challenge...');
       await axios.get( this.attach_url );
       throw new Error('failed to get auth challenge');
     } catch ( ex ) {
@@ -73,7 +78,11 @@ class AmcrestEmitter extends EventEmitter {
   }
 
   async connect() {
-    const options = await this.#get_options();
+    console.log('requesting auth challenge...');
+
+    const options = await this.#get_axios_options();
+
+    console.log('completed auth challenge!');
 
     const stream = await axios.get( this.attach_url, options );
 

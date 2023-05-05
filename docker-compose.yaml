@@ -1,0 +1,7 @@
+version: "3.9"
+
+services:
+  amcrest-2-mqtt:
+    build: .
+    env_file: .env
+    restart: always
