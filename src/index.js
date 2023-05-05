@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const mqtt = require('mqtt');
 const AmcrestEmitter = require('./classes/amcrest-emitter');
+const log = require('./util/log');
 
 const {
   AMCREST_HOST,
@@ -10,7 +11,7 @@ const {
   MQTT_URL
 } = process.env;
 
-console.log( 'env vars:', {
+log.info( 'env vars:', {
   AMCREST_HOST,
   AMCREST_USER,
   MQTT_URL,
@@ -29,7 +30,7 @@ amcrestEmitter.connect();
 
 amcrestEmitter.on( 'event', ({ event }) => {
   if ( event.Code === 'PhoneCallDetect' && event.action === 'Start' ) {
-    console.log('========== DOORBELL PRESSED ==========');
+    log.info('========== DOORBELL PRESSED ==========');
 
     const mqtt_payload = JSON.stringify({
       date: new Date().toISOString()
@@ -38,5 +39,5 @@ amcrestEmitter.on( 'event', ({ event }) => {
     client.publish( 'amcrest-2-mqtt/doorbell1/doorbell-pressed', mqtt_payload );
   }
 
-  console.log( event );
+  log.info( event );
 });

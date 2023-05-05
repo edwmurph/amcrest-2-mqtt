@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Auth = require('http-auth-client');
 const { EventEmitter } = require('node:events');
+const log = require('../util/log');
 
 class AmcrestEmitter extends EventEmitter {
 
@@ -76,17 +77,17 @@ class AmcrestEmitter extends EventEmitter {
   }
 
   async connect() {
-    console.log('requesting auth challenge...');
+    log.info('requesting auth challenge...');
 
     const options = await this.#get_axios_options();
 
-    console.log('completed auth challenge!');
+    log.info('completed auth challenge!');
 
     const stream = await axios.get( this.attach_url, options );
 
     stream.data.on( 'data', this.on_data.bind( this ) );
 
-    console.log('listening for amcrest events...');
+    log.info('listening for amcrest events...');
   }
 }
 
