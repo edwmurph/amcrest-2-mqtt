@@ -11,8 +11,6 @@ class AmcrestEmitter extends EventEmitter {
       throw new Error('missing password');
     }
 
-    console.log({ host, user });
-
     const url_base = `http://${ host }`;
 
     Object.assign( this, {
