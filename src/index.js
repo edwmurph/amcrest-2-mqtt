@@ -13,8 +13,8 @@ const {
 
 log.info( 'env vars:', {
   AMCREST_HOST,
-  AMCREST_USER,
   MQTT_URL,
+  AMCREST_USER: AMCREST_USER ? '***' : AMCREST_USER,
   AMCREST_PASSWORD: AMCREST_PASSWORD ? '***' : AMCREST_PASSWORD
 });
 
@@ -29,7 +29,7 @@ const amcrestEmitter = new AmcrestEmitter({
 amcrestEmitter.connect();
 
 amcrestEmitter.on( 'event', ({ event }) => {
-  if ( event.Code === 'PhoneCallDetect' && event.action === 'Start' ) {
+  if ( event.Code === 'AlarmLocal' && event.action === 'Start' ) {
     log.info('========== DOORBELL PRESSED ==========');
 
     const mqtt_payload = JSON.stringify({
