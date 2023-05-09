@@ -18,13 +18,14 @@ class AmcrestEmitter extends EventEmitter {
       host,
       user,
       password,
-      attach_url: `${ url_base }/cgi-bin/eventManager.cgi?action=attach&codes=[All]`
+      attach_url: `${ url_base }/cgi-bin/eventManager.cgi?action=attach&codes=[All]`,
+      time_url: `${ url_base }/cgi-bin/global.cgi?action=getCurrentTime`
     });
   }
 
-  async #get_axios_options() {
+  async #get_digest_auth( url ) {
     try {
-      await axios.get( this.attach_url );
+      await axios.get( url );
       throw new Error('failed to get auth challenge');
     } catch ( ex ) {
       if ( ex.response?.status !== 401 ) {
@@ -36,12 +37,7 @@ class AmcrestEmitter extends EventEmitter {
 
         auth.credentials( this.user, this.password );
 
-        return {
-          responseType: 'stream',
-          headers: {
-            ['Authorization']: auth.authorization( 'GET', this.attach_url )
-          }
-        };
+        return auth.authorization( 'GET', url );
       }
     }
   }
@@ -76,18 +72,31 @@ class AmcrestEmitter extends EventEmitter {
     }
   }
 
+  async is_alive() {
+    const res = await axios.get( this.time_url, {
+      headers: {
+        ['Authorization']: await this.#get_digest_auth( this.time_url )
+      }
+    });
+
+    log.info( 'connection is alive', res.data.trim() );
+
+    return true;
+  }
+
   async connect() {
-    log.info('requesting auth challenge...');
-
-    const options = await this.#get_axios_options();
-
-    log.info('completed auth challenge!');
-
-    const stream = await axios.get( this.attach_url, options );
+    const stream = await axios.get( this.attach_url, {
+      responseType: 'stream',
+      headers: {
+        ['Authorization']: await this.#get_digest_auth( this.attach_url )
+      }
+    });
 
     stream.data.on( 'data', this.on_data.bind( this ) );
 
     log.info('listening for amcrest events...');
+
+    setInterval( this.is_alive.bind( this ), 60e3 * 10 );
   }
 }
 
