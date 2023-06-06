@@ -18,8 +18,7 @@ class AmcrestEmitter extends EventEmitter {
       host,
       user,
       password,
-      attach_url: `${ url_base }/cgi-bin/eventManager.cgi?action=attach&codes=[All]`,
-      time_url: `${ url_base }/cgi-bin/global.cgi?action=getCurrentTime`
+      attach_url: `${ url_base }/cgi-bin/eventManager.cgi?action=attach&codes=[All]`
     });
   }
 
@@ -72,18 +71,6 @@ class AmcrestEmitter extends EventEmitter {
     }
   }
 
-  async is_alive() {
-    const res = await axios.get( this.time_url, {
-      headers: {
-        ['Authorization']: await this.#get_digest_auth( this.time_url )
-      }
-    });
-
-    log.info( 'connection is alive', res.data.trim() );
-
-    return true;
-  }
-
   async connect() {
     const stream = await axios.get( this.attach_url, {
       responseType: 'stream',
@@ -95,8 +82,6 @@ class AmcrestEmitter extends EventEmitter {
     stream.data.on( 'data', this.on_data.bind( this ) );
 
     log.info('listening for amcrest events...');
-
-    setInterval( this.is_alive.bind( this ), 60e3 * 10 );
   }
 }
 
