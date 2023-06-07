@@ -3,6 +3,8 @@ const Auth = require('http-auth-client');
 const { EventEmitter } = require('node:events');
 const log = require('../util/log');
 
+const TEN_MINS = 60e3 * 10;
+
 class AmcrestEmitter extends EventEmitter {
 
   constructor({ host, user, password }) {
@@ -15,6 +17,7 @@ class AmcrestEmitter extends EventEmitter {
     const url_base = `http://${ host }`;
 
     Object.assign( this, {
+      last_ntp_check: Date.now(),
       host,
       user,
       password,
@@ -67,7 +70,18 @@ class AmcrestEmitter extends EventEmitter {
         event[ key ] = key === 'data' && value ? JSON.parse( value ) : value;
       }
 
+      if ( event.Code === 'NTPAdjustTime' ) {
+        this.last_ntp_check = Date.now();
+      }
+
       this.emit( 'event', { event, raw } );
+    }
+  }
+
+  healthcheck() {
+    if ( Date.now() - TEN_MINS > this.last_ntp_check ) {
+      log.info('Exiting because last ntp check was more than 10m ago...');
+      process.exit( 1 );
     }
   }
 
@@ -80,6 +94,8 @@ class AmcrestEmitter extends EventEmitter {
     });
 
     stream.data.on( 'data', this.on_data.bind( this ) );
+
+    setInterval( this.healthcheck.bind( this ), 60e3 );
 
     log.info('listening for amcrest events...');
   }
