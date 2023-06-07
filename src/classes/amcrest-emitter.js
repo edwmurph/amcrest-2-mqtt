@@ -3,7 +3,7 @@ const Auth = require('http-auth-client');
 const { EventEmitter } = require('node:events');
 const log = require('../util/log');
 
-const TEN_MINS = 60e3 * 10;
+const HEALTH_CHECK_TIMEOUT = 60e3 * 7;
 
 class AmcrestEmitter extends EventEmitter {
 
@@ -23,6 +23,16 @@ class AmcrestEmitter extends EventEmitter {
       password,
       attach_url: `${ url_base }/cgi-bin/eventManager.cgi?action=attach&codes=[All]`
     });
+  }
+
+  #ms_to_duration( ms ) {
+    const pad = ( n, z = 2 ) => ( '00' + n ).slice( -z );
+
+    return [
+      pad( ms/3.6e6|0 ),
+      pad( ( ms%3.6e6 )/6e4 | 0 ),
+      pad( ( ms%6e4 )/1000|0 )
+    ].join(':');
   }
 
   async #get_digest_auth( url ) {
@@ -78,9 +88,13 @@ class AmcrestEmitter extends EventEmitter {
     }
   }
 
-  healthcheck() {
-    if ( Date.now() - TEN_MINS > this.last_ntp_check ) {
-      log.info('Exiting because last ntp check was more than 10m ago...');
+  health_check() {
+    const ms = Date.now() - this.last_ntp_check;
+
+    log.info( `time since last ntp check: ${ this.#ms_to_duration( ms ) }` );
+
+    if ( ms > HEALTH_CHECK_TIMEOUT ) {
+      log.info('exiting because last ntp check was more than timeout');
       process.exit( 1 );
     }
   }
@@ -95,7 +109,7 @@ class AmcrestEmitter extends EventEmitter {
 
     stream.data.on( 'data', this.on_data.bind( this ) );
 
-    setInterval( this.healthcheck.bind( this ), 60e3 );
+    setInterval( this.health_check.bind( this ), 60e3 );
 
     log.info('listening for amcrest events...');
   }
