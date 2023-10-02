@@ -6,4 +6,12 @@ function info( ...args ) {
   log( 'INFO', ...args );
 }
 
-module.exports = { info };
+function warn( ...args ) {
+  log( 'WARN', ...args );
+}
+
+function error( ...args ) {
+  log( 'ERROR', ...args );
+}
+
+module.exports = { info, warn, error };
