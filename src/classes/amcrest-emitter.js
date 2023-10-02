@@ -5,6 +5,15 @@ const log = require('../util/log');
 
 const HEALTH_CHECK_TIMEOUT = 60e3 * 7;
 
+function parseObject( str ) {
+  try {
+    return JSON.parse( str );
+  } catch ( ex ) {
+    log.error( ex );
+    return str;
+  }
+}
+
 class AmcrestEmitter extends EventEmitter {
 
   constructor({ host, user, password }) {
@@ -77,7 +86,7 @@ class AmcrestEmitter extends EventEmitter {
 
       for ( const datum of data.split(';') ) {
         const [ key, value ] = datum.split('=');
-        event[ key ] = key === 'data' && value ? JSON.parse( value ) : value;
+        event[ key ] = parseObject( value );
       }
 
       if ( event.Code === 'NTPAdjustTime' ) {
