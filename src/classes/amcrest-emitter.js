@@ -9,7 +9,6 @@ function parseObject( str ) {
   try {
     return JSON.parse( str );
   } catch ( ex ) {
-    log.error( ex );
     return str;
   }
 }
